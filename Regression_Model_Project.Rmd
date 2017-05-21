@@ -1,0 +1,72 @@
+---
+title: "Comparision of Automatic vs Manual transmission"
+author: "Anuj Parashar"
+date: "5/20/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Executive Summary
+In this paper, we explored the relationship between a set of variables such as number of cylinders, transmission type etc and the fuel consumption (miles per gallon) for automobiles. For this, we used the "mtcars" dataset extracted from 1974 Motor Trend US magazine. The paper    particularly tried to answer the following 2 aspects of the data:
+
+1. Is an automatic or manual transmission better for MPG?
+
+2. Quantify the MPG difference between automatic and manual transmissions.
+
+Based on the analysis, it has been deducted that the manual transmission is in general better for milege. However, the overall impact of transmission type is limited and there are other varaibles which affects the milege more significantly.
+
+## Dataset: "mtcars"
+To start with, let's explore the dataset "mtcars":
+```{r cars}
+str(mtcars)
+```
+The dataset has 32 observation of 11 variables. Out of these, "mpg" (Miles(US)/gallon) would be our outcome and rest of the variables
+would be used as predictors (one or many).
+
+## Linear Regression Analysis (with "am" as predictor)
+This automatic vs manual transmission can be quickly compared by doing a "t-test" with an assumption that the data is linearly distributed.
+```{r}
+t.test(mpg ~ am, data = mtcars)
+```
+
+This shows that in general, the **manual transmission seems to be giving better milage as compared to automatic transmission**. Lets quantify it further with a simple linear regression with "am" as predictor and "mpg" as output.
+
+```{r}
+summary(lm(mpg ~ as.factor(am), mtcars))
+```
+
+Interpreting the coefficients, it's evident that on an average the manual transmission gives more milage by 7.245 miles/gallon (as.factor(am)1). Interesting though is the R2 values of .3598 which tells us that the **transmission mode only explains 36% of the variation in "mpg"**.
+
+Though we already have the answers for our primary questions, let's do some further exploratory analysis.
+
+## Exploratory Data Analysis
+Based on the above observations, it's clear that there are other precitors which significantly affects the milege. As there is a large number of predictors in this case (10), the choice of the right model is not straightforward. One option is to perform "ANOVA" but there is a better way to use AIC in a Stepwise algorithm. For this, we use "step" function:
+
+```{r}
+fit.all      <- lm(mpg ~ ., data = mtcars)
+backward.aic <- step(fit.all, direction = "backward", k = 2, trace = 0)
+backward.aic$call
+summary(backward.aic)$r.squared
+```
+
+The above model is a far better choice of a model fit for this dataset and ˜83% of variance can be explained by it. We can try to do better by running further "ANOVA" on different interaction models among these varaible but it's out of scope for this paper.
+
+## Residual Plots
+Let's create the diagnostic plot for the above model.
+```{r}
+par(mfrow=c(2,2))
+plot(backward.aic)
+```
+
+Based on the above plots, the following observations can be made:
+
+* There is no systematic pattern apprearing in "Residuals vs Fitted Values" plot which points out that the model is actually a good fit.
+
+* The linearity of the "Normal Q-Q" plot shows that the residuals are normally distributed.
+
+* The "Scale-Location" plot, also knows as "Spread-Location" plot, shows that the residuals are equally spread along the range of predictors.
